@@ -187,9 +187,7 @@ class AdminSeleniumTestCase(SeleniumTestCase, StaticLiveServerTestCase):
 
         if values:
             options = self.selenium.find_elements(By.CSS_SELECTOR, options_selector)
-            actual_values = []
-            for option in options:
-                actual_values.append(option.get_attribute("value"))
+            actual_values = [option.get_attribute("value") for option in options]
             self.assertEqual(values, actual_values)
         else:
             # Prevent the `find_elements(By.CSS_SELECTOR, …)` call from blocking

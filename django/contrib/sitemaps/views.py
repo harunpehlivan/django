@@ -81,10 +81,11 @@ def index(
                 all_indexes_lastmod = False
         sites.append(SitemapIndexItem(absolute_url, site_lastmod))
         # Add links to all pages of the sitemap.
-        for page in range(2, site.paginator.num_pages + 1):
-            sites.append(
-                SitemapIndexItem("%s?p=%s" % (absolute_url, page), site_lastmod)
-            )
+        sites.extend(
+            SitemapIndexItem("%s?p=%s" % (absolute_url, page), site_lastmod)
+            for page in range(2, site.paginator.num_pages + 1)
+        )
+
     # If lastmod is defined for all sites, set header so as
     # ConditionalGetMiddleware is able to send 304 NOT MODIFIED
     if all_indexes_lastmod and latest_lastmod:

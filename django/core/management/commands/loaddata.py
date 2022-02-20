@@ -128,8 +128,7 @@ class Command(BaseCommand):
 
     def reset_sequences(self, connection, models):
         """Reset database sequences for the given connection and models."""
-        sequence_sql = connection.ops.sequence_reset_sql(no_style(), models)
-        if sequence_sql:
+        if sequence_sql := connection.ops.sequence_reset_sql(no_style(), models):
             if self.verbosity >= 2:
                 self.stdout.write("Resetting sequences")
             with connection.cursor() as cursor:
@@ -207,8 +206,7 @@ class Command(BaseCommand):
             self.models.add(obj.object.__class__)
             try:
                 obj.save(using=self.using)
-            # psycopg2 raises ValueError if data contains NUL chars.
-            except (DatabaseError, IntegrityError, ValueError) as e:
+            except (DatabaseError, ValueError) as e:
                 e.args = (
                     "Could not load %(object_label)s(pk=%(pk)s): %(error_msg)s"
                     % {
@@ -302,14 +300,12 @@ class Command(BaseCommand):
         }
 
     def find_fixture_files_in_dir(self, fixture_dir, fixture_name, targets):
-        fixture_files_in_dir = []
         path = os.path.join(fixture_dir, fixture_name)
-        for candidate in glob.iglob(glob.escape(path) + "*"):
-            if os.path.basename(candidate) in targets:
-                # Save the fixture_dir and fixture_name for future error
-                # messages.
-                fixture_files_in_dir.append((candidate, fixture_dir, fixture_name))
-        return fixture_files_in_dir
+        return [
+            (candidate, fixture_dir, fixture_name)
+            for candidate in glob.iglob(f'{glob.escape(path)}*')
+            if os.path.basename(candidate) in targets
+        ]
 
     @functools.lru_cache(maxsize=None)
     def find_fixtures(self, fixture_label):
@@ -402,14 +398,13 @@ class Command(BaseCommand):
             cmp_fmt = None
 
         if len(parts) > 1:
-            if parts[-1] in self.serialization_formats:
-                ser_fmt = parts[-1]
-                parts = parts[:-1]
-            else:
+            if parts[-1] not in self.serialization_formats:
                 raise CommandError(
                     "Problem installing fixture '%s': %s is not a known "
                     "serialization format." % (".".join(parts[:-1]), parts[-1])
                 )
+            ser_fmt = parts[-1]
+            parts = parts[:-1]
         else:
             ser_fmt = None
 

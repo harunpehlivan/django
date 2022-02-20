@@ -423,7 +423,7 @@ class GDALRaster(GDALRasterBase):
         ds_input.setdefault("driver", self.driver.name)
 
         if "name" not in ds_input:
-            ds_input["name"] = self.name + "_copy." + self.driver.name
+            ds_input["name"] = f'{self.name}_copy.{self.driver.name}'
 
         if "datatype" not in ds_input:
             ds_input["datatype"] = self.bands[0].datatype()
@@ -461,7 +461,7 @@ class GDALRaster(GDALRasterBase):
         if name:
             clone_name = name
         elif self.driver.name != "MEM":
-            clone_name = self.name + "_copy." + self.driver.name
+            clone_name = f'{self.name}_copy.{self.driver.name}'
         else:
             clone_name = os.path.join(VSI_MEM_FILESYSTEM_BASE_PATH, str(uuid.uuid4()))
         return GDALRaster(

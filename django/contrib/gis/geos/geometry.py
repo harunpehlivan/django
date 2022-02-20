@@ -352,10 +352,7 @@ class GEOSGeometryBase(GEOSBase):
     def srid(self):
         "Get the SRID for the geometry. Return None if no SRID is set."
         s = capi.geos_get_srid(self.ptr)
-        if s == 0:
-            return None
-        else:
-            return s
+        return None if s == 0 else s
 
     @srid.setter
     def srid(self, srid):
@@ -723,8 +720,7 @@ class GEOSGeometry(GEOSGeometryBase, ListMixin):
         if isinstance(geo_input, bytes):
             geo_input = force_str(geo_input)
         if isinstance(geo_input, str):
-            wkt_m = wkt_regex.match(geo_input)
-            if wkt_m:
+            if wkt_m := wkt_regex.match(geo_input):
                 # Handle WKT input.
                 if wkt_m["srid"]:
                     input_srid = int(wkt_m["srid"])

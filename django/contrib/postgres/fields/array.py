@@ -65,20 +65,17 @@ class ArrayField(CheckFieldDefaultMixin, Field):
                     id="postgres.E002",
                 )
             )
-        else:
-            # Remove the field name checks as they are not needed here.
-            base_errors = self.base_field.check()
-            if base_errors:
-                messages = "\n    ".join(
-                    "%s (%s)" % (error.msg, error.id) for error in base_errors
+        elif base_errors := self.base_field.check():
+            messages = "\n    ".join(
+                "%s (%s)" % (error.msg, error.id) for error in base_errors
+            )
+            errors.append(
+                checks.Error(
+                    "Base field for array has errors:\n    %s" % messages,
+                    obj=self,
+                    id="postgres.E001",
                 )
-                errors.append(
-                    checks.Error(
-                        "Base field for array has errors:\n    %s" % messages,
-                        obj=self,
-                        id="postgres.E001",
-                    )
-                )
+            )
         return errors
 
     def set_attributes_from_name(self, name):
@@ -149,8 +146,7 @@ class ArrayField(CheckFieldDefaultMixin, Field):
         return json.dumps(values)
 
     def get_transform(self, name):
-        transform = super().get_transform(name)
-        if transform:
+        if transform := super().get_transform(name):
             return transform
         if "_" not in name:
             try:
@@ -181,12 +177,14 @@ class ArrayField(CheckFieldDefaultMixin, Field):
                     code="item_invalid",
                     params={"nth": index + 1},
                 )
-        if isinstance(self.base_field, ArrayField):
-            if len({len(i) for i in value}) > 1:
-                raise exceptions.ValidationError(
-                    self.error_messages["nested_array_mismatch"],
-                    code="nested_array_mismatch",
-                )
+        if (
+            isinstance(self.base_field, ArrayField)
+            and len({len(i) for i in value}) > 1
+        ):
+            raise exceptions.ValidationError(
+                self.error_messages["nested_array_mismatch"],
+                code="nested_array_mismatch",
+            )
 
     def run_validators(self, value):
         super().run_validators(value)

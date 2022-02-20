@@ -142,22 +142,18 @@ class ViewIndexView(BaseAdminDocsView):
     template_name = "admin_doc/view_index.html"
 
     def get_context_data(self, **kwargs):
-        views = []
         url_resolver = get_resolver(get_urlconf())
         try:
             view_functions = extract_views_from_urlpatterns(url_resolver.url_patterns)
         except ImproperlyConfigured:
             view_functions = []
-        for (func, regex, namespace, name) in view_functions:
-            views.append(
-                {
+        views = [{
                     "full_name": get_view_name(func),
                     "url": simplify_regex(regex),
                     "url_name": ":".join((namespace or []) + (name and [name] or [])),
                     "namespace": ":".join(namespace or []),
                     "name": name,
-                }
-            )
+                } for (func, regex, namespace, name) in view_functions]
         return super().get_context_data(**{**kwargs, "views": views})
 
 
@@ -272,17 +268,13 @@ class ModelDetailView(BaseAdminDocsView):
                 "app_label": app_label,
                 "object_name": data_type,
             }
-            fields.append(
-                {
+            fields.extend(({
                     "name": "%s.all" % field.name,
                     "data_type": "List",
                     "verbose": utils.parse_rst(
                         _("all %s") % verbose, "model", _("model:") + opts.model_name
                     ),
-                }
-            )
-            fields.append(
-                {
+                }, {
                     "name": "%s.count" % field.name,
                     "data_type": "Integer",
                     "verbose": utils.parse_rst(
@@ -290,14 +282,14 @@ class ModelDetailView(BaseAdminDocsView):
                         "model",
                         _("model:") + opts.model_name,
                     ),
-                }
-            )
-
+                }))
         methods = []
         # Gather model methods.
         for func_name, func in model.__dict__.items():
-            if inspect.isfunction(func) or isinstance(
-                func, (cached_property, property)
+            if (
+                inspect.isfunction(func)
+                or not inspect.isfunction(func)
+                and isinstance(func, (cached_property, property))
             ):
                 try:
                     for exclude in MODEL_METHODS_EXCLUDE:
@@ -360,17 +352,13 @@ class ModelDetailView(BaseAdminDocsView):
                 "object_name": rel.related_model._meta.object_name,
             }
             accessor = rel.get_accessor_name()
-            fields.append(
-                {
+            fields.extend(({
                     "name": "%s.all" % accessor,
                     "data_type": "List",
                     "verbose": utils.parse_rst(
                         _("all %s") % verbose, "model", _("model:") + opts.model_name
                     ),
-                }
-            )
-            fields.append(
-                {
+                }, {
                     "name": "%s.count" % accessor,
                     "data_type": "Integer",
                     "verbose": utils.parse_rst(
@@ -378,8 +366,7 @@ class ModelDetailView(BaseAdminDocsView):
                         "model",
                         _("model:") + opts.model_name,
                     ),
-                }
-            )
+                }))
         return super().get_context_data(
             **{
                 **kwargs,
@@ -407,10 +394,7 @@ class TemplateDetailView(BaseAdminDocsView):
             # This doesn't account for template loaders (#24128).
             for index, directory in enumerate(default_engine.dirs):
                 template_file = Path(safe_join(directory, template))
-                if template_file.exists():
-                    template_contents = template_file.read_text()
-                else:
-                    template_contents = ""
+                template_contents = template_file.read_text() if template_file.exists() else ""
                 templates.append(
                     {
                         "file": template_file,
@@ -493,5 +477,5 @@ def simplify_regex(pattern):
     pattern = replace_unnamed_groups(pattern)
     pattern = replace_metacharacters(pattern)
     if not pattern.startswith("/"):
-        pattern = "/" + pattern
+        pattern = f'/{pattern}'
     return pattern

@@ -30,15 +30,16 @@ class KMLSitemap(Sitemap):
             sources = apps.get_models()
         for source in sources:
             if isinstance(source, models.base.ModelBase):
-                for field in source._meta.fields:
-                    if isinstance(field, GeometryField):
-                        kml_sources.append(
-                            (
-                                source._meta.app_label,
-                                source._meta.model_name,
-                                field.name,
-                            )
-                        )
+                kml_sources.extend(
+                    (
+                        source._meta.app_label,
+                        source._meta.model_name,
+                        field.name,
+                    )
+                    for field in source._meta.fields
+                    if isinstance(field, GeometryField)
+                )
+
             elif isinstance(source, (list, tuple)):
                 if len(source) != 3:
                     raise ValueError(
