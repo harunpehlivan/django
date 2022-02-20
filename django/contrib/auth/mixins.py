@@ -90,11 +90,11 @@ class PermissionRequiredMixin(AccessMixin):
                 f"{self.__class__.__name__}.permission_required, or override "
                 f"{self.__class__.__name__}.get_permission_required()."
             )
-        if isinstance(self.permission_required, str):
-            perms = (self.permission_required,)
-        else:
-            perms = self.permission_required
-        return perms
+        return (
+            (self.permission_required,)
+            if isinstance(self.permission_required, str)
+            else self.permission_required
+        )
 
     def has_permission(self):
         """

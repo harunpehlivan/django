@@ -234,8 +234,7 @@ class SplitArrayField(forms.Field):
         cleaned_data, null_index = self._remove_trailing_nulls(cleaned_data)
         if null_index is not None:
             errors = errors[:null_index]
-        errors = list(filter(None, errors))
-        if errors:
+        if errors := list(filter(None, errors)):
             raise ValidationError(list(chain.from_iterable(errors)))
         return cleaned_data
 

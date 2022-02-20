@@ -158,8 +158,9 @@ class SessionStore(SessionBase):
 
         try:
             output_file_fd, output_file_name = tempfile.mkstemp(
-                dir=dir, prefix=prefix + "_out_"
+                dir=dir, prefix=f'{prefix}_out_'
             )
+
             renamed = False
             try:
                 try:

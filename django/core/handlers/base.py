@@ -362,8 +362,7 @@ class BaseHandler:
         return a response for this exception, return None.
         """
         for middleware_method in self._exception_middleware:
-            response = middleware_method(request, exception)
-            if response:
+            if response := middleware_method(request, exception):
                 return response
         return None
 

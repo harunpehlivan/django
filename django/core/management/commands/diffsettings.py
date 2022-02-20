@@ -80,12 +80,17 @@ class Command(BaseCommand):
                     self.style.SUCCESS("+ %s = %s" % (key, user_settings[key]))
                 )
             elif user_settings[key] != default_settings[key]:
-                output.append(
-                    self.style.ERROR("- %s = %s" % (key, default_settings[key]))
+                output.extend(
+                    (
+                        self.style.ERROR(
+                            "- %s = %s" % (key, default_settings[key])
+                        ),
+                        self.style.SUCCESS(
+                            "+ %s = %s" % (key, user_settings[key])
+                        ),
+                    )
                 )
-                output.append(
-                    self.style.SUCCESS("+ %s = %s" % (key, user_settings[key]))
-                )
+
             elif options["all"]:
                 output.append("  %s = %s" % (key, user_settings[key]))
         return output

@@ -566,8 +566,7 @@ class BaseCommand:
             # No databases are configured (or the dummy one)
             return
 
-        plan = executor.migration_plan(executor.loader.graph.leaf_nodes())
-        if plan:
+        if plan := executor.migration_plan(executor.loader.graph.leaf_nodes()):
             apps_waiting_migration = sorted(
                 {migration.app_label for migration, backwards in plan}
             )
@@ -625,10 +624,12 @@ class AppCommand(BaseCommand):
                 "%s. Are you sure your INSTALLED_APPS setting is correct?" % e
             )
         output = []
-        for app_config in app_configs:
-            app_output = self.handle_app_config(app_config, **options)
-            if app_output:
-                output.append(app_output)
+        output.extend(
+            app_output
+            for app_config in app_configs
+            if (app_output := self.handle_app_config(app_config, **options))
+        )
+
         return "\n".join(output)
 
     def handle_app_config(self, app_config, **options):
@@ -662,10 +663,12 @@ class LabelCommand(BaseCommand):
 
     def handle(self, *labels, **options):
         output = []
-        for label in labels:
-            label_output = self.handle_label(label, **options)
-            if label_output:
-                output.append(label_output)
+        output.extend(
+            label_output
+            for label in labels
+            if (label_output := self.handle_label(label, **options))
+        )
+
         return "\n".join(output)
 
     def handle_label(self, label, **options):

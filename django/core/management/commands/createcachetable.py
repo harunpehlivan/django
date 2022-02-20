@@ -98,10 +98,11 @@ class Command(BaseCommand):
                 )
             table_output.append(" ".join(field_output))
         full_statement = ["CREATE TABLE %s (" % qn(tablename)]
-        for i, line in enumerate(table_output):
-            full_statement.append(
-                "    %s%s" % (line, "," if i < len(table_output) - 1 else "")
-            )
+        full_statement.extend(
+            "    %s%s" % (line, "," if i < len(table_output) - 1 else "")
+            for i, line in enumerate(table_output)
+        )
+
         full_statement.append(");")
 
         full_statement = "\n".join(full_statement)

@@ -100,17 +100,13 @@ class Command(BaseCommand):
             user_data[PASSWORD_FIELD] = None
         try:
             if options["interactive"]:
-                # Same as user_data but without many to many fields and with
-                # foreign keys as fake model instances instead of raw IDs.
-                fake_user_data = {}
                 if hasattr(self.stdin, "isatty") and not self.stdin.isatty():
                     raise NotRunningInTTYException
                 default_username = get_default_username(database=database)
                 if username:
-                    error_msg = self._validate_username(
+                    if error_msg := self._validate_username(
                         username, verbose_field_name, database
-                    )
-                    if error_msg:
+                    ):
                         self.stderr.write(error_msg)
                         username = None
                 elif username == "":
@@ -126,19 +122,21 @@ class Command(BaseCommand):
                         self.username_field, message, default_username
                     )
                     if username:
-                        error_msg = self._validate_username(
+                        if error_msg := self._validate_username(
                             username, verbose_field_name, database
-                        )
-                        if error_msg:
+                        ):
                             self.stderr.write(error_msg)
                             username = None
                             continue
                 user_data[self.UserModel.USERNAME_FIELD] = username
-                fake_user_data[self.UserModel.USERNAME_FIELD] = (
-                    self.username_field.remote_field.model(username)
+                fake_user_data = {
+                    self.UserModel.USERNAME_FIELD: self.username_field.remote_field.model(
+                        username
+                    )
                     if self.username_field.remote_field
                     else username
-                )
+                }
+
                 # Prompt for required fields.
                 for field_name in self.UserModel.REQUIRED_FIELDS:
                     field = self.UserModel._meta.get_field(field_name)
@@ -207,16 +205,14 @@ class Command(BaseCommand):
                         "You must use --%s with --noinput."
                         % self.UserModel.USERNAME_FIELD
                     )
-                else:
-                    error_msg = self._validate_username(
-                        username, verbose_field_name, database
-                    )
-                    if error_msg:
-                        raise CommandError(error_msg)
+                if error_msg := self._validate_username(
+                    username, verbose_field_name, database
+                ):
+                    raise CommandError(error_msg)
 
                 user_data[self.UserModel.USERNAME_FIELD] = username
                 for field_name in self.UserModel.REQUIRED_FIELDS:
-                    env_var = "DJANGO_SUPERUSER_" + field_name.upper()
+                    env_var = f'DJANGO_SUPERUSER_{field_name.upper()}'
                     value = options[field_name] or os.environ.get(env_var)
                     if not value:
                         raise CommandError(

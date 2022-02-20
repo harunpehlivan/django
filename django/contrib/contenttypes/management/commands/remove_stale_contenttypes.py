@@ -61,15 +61,11 @@ class Command(BaseCommand):
                         collector = NoFastDeleteCollector(using=using, origin=ct)
                         collector.collect([ct])
 
-                        for obj_type, objs in collector.data.items():
-                            if objs != {ct}:
-                                ct_info.append(
-                                    "    - %s %s object(s)"
+                        ct_info.extend("    - %s %s object(s)"
                                     % (
                                         len(objs),
                                         obj_type._meta.label,
-                                    )
-                                )
+                                    ) for obj_type, objs in collector.data.items() if objs != {ct})
                     content_type_display = "\n".join(ct_info)
                     self.stdout.write(
                         """Some content types in your database are stale and can be deleted.
@@ -97,9 +93,8 @@ If you're unsure, answer 'no'."""
                                 % (ct.app_label, ct.model)
                             )
                         ct.delete()
-                else:
-                    if verbosity >= 2:
-                        self.stdout.write("Stale content types remain.")
+                elif verbosity >= 2:
+                    self.stdout.write("Stale content types remain.")
 
 
 class NoFastDeleteCollector(Collector):

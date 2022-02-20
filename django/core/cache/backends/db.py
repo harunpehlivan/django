@@ -275,8 +275,7 @@ class DatabaseCache(BaseDatabaseCache):
                 cursor.execute(
                     connection.ops.cache_key_culling_sql() % table, [cull_num]
                 )
-                last_cache_key = cursor.fetchone()
-                if last_cache_key:
+                if last_cache_key := cursor.fetchone():
                     cursor.execute(
                         "DELETE FROM %s WHERE %s < %%s"
                         % (

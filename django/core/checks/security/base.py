@@ -231,11 +231,12 @@ def check_secret_key_fallbacks(app_configs, **kwargs):
     except (ImproperlyConfigured, AttributeError):
         warnings.append(Warning(W025.msg % "SECRET_KEY_FALLBACKS", id=W025.id))
     else:
-        for index, key in enumerate(fallbacks):
-            if not _check_secret_key(key):
-                warnings.append(
-                    Warning(W025.msg % f"SECRET_KEY_FALLBACKS[{index}]", id=W025.id)
-                )
+        warnings.extend(
+            Warning(W025.msg % f"SECRET_KEY_FALLBACKS[{index}]", id=W025.id)
+            for index, key in enumerate(fallbacks)
+            if not _check_secret_key(key)
+        )
+
     return warnings
 
 

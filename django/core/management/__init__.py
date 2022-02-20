@@ -224,17 +224,13 @@ class ManagementUtility:
             ]
             commands_dict = defaultdict(lambda: [])
             for name, app in get_commands().items():
-                if app == "django.core":
-                    app = "django"
-                else:
-                    app = app.rpartition(".")[-1]
+                app = "django" if app == "django.core" else app.rpartition(".")[-1]
                 commands_dict[app].append(name)
             style = color_style()
             for app in sorted(commands_dict):
                 usage.append("")
                 usage.append(style.NOTICE("[%s]" % app))
-                for name in sorted(commands_dict[app]):
-                    usage.append("    %s" % name)
+                usage.extend("    %s" % name for name in sorted(commands_dict[app]))
             # Output an extra note if settings are not properly configured
             if self.settings_exception is not None:
                 usage.append(
@@ -272,12 +268,11 @@ class ManagementUtility:
                 sys.stderr.write(". Did you mean %s?" % possible_matches[0])
             sys.stderr.write("\nType '%s help' for usage.\n" % self.prog_name)
             sys.exit(1)
-        if isinstance(app_name, BaseCommand):
-            # If the command is already loaded, use it directly.
-            klass = app_name
-        else:
-            klass = load_command_class(app_name, subcommand)
-        return klass
+        return (
+            app_name
+            if isinstance(app_name, BaseCommand)
+            else load_command_class(app_name, subcommand)
+        )
 
     def autocomplete(self):
         """

@@ -201,7 +201,7 @@ class Signer:
 
     def signature(self, value, key=None):
         key = key or self.key
-        return base64_hmac(self.salt + "signer", value, key, algorithm=self.algorithm)
+        return base64_hmac(f'{self.salt}signer', value, key, algorithm=self.algorithm)
 
     def sign(self, value):
         return "%s%s%s" % (value, self.sep, self.signature(value))
@@ -237,7 +237,7 @@ class Signer:
                 is_compressed = True
         base64d = b64_encode(data).decode()
         if is_compressed:
-            base64d = "." + base64d
+            base64d = f'.{base64d}'
         return self.sign(base64d)
 
     def unsign_object(self, signed_obj, serializer=JSONSerializer, **kwargs):
